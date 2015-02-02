@@ -37,7 +37,7 @@
     //[self testCombineSignals];
     
     //6.测试RACSequence
-    [self testSequence];
+    //[self testSequence];
     
     //7.测试Signal
     [self testSignal];
@@ -482,7 +482,32 @@
 }
 
 - (void)testSignal{
-    
+    {
+        //每一次subscription，队徽产生side effects
+        __block int missilesToLaunch = 0;
+        
+        RACSignal *processedSignal = [[RACSignal
+                                       return:@"missiles"]
+                                      map:^(id x) {
+                                          missilesToLaunch++;
+                                          return [NSString stringWithFormat:@"will launch %d %@", missilesToLaunch, x];
+                                      }];
+        
+        // This will print "First will launch 1 missiles"
+        [processedSignal subscribeNext:^(id x) {
+            NSLog(@"First %@", x);
+        }];
+        
+        // This will print "Second will launch 2 missiles"
+        [processedSignal subscribeNext:^(id x) {
+            NSLog(@"Second %@", x);
+        }];
+        
+        /*
+         2015-02-02 19:54:32.078 ReactiveCocoaSample[10426:278385] First will launch 1 missiles
+         2015-02-02 19:54:32.078 ReactiveCocoaSample[10426:278385] Second will launch 2 missiles
+         */
+    }
 }
 
 
