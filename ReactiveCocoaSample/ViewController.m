@@ -46,7 +46,8 @@
     //[self testDistinctUntilChanges];
     
     //9.测试RACDefault
-    [self testRACDefault];
+    //[self testRACDefault];
+    
 }
 
 

@@ -16,6 +16,7 @@
 		A3654D401A7F17AE0026856D /* ReactiveCocoaSampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A3654D3F1A7F17AE0026856D /* ReactiveCocoaSampleTests.m */; };
 		A3654D5B1A7F242A0026856D /* ReactiveCocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A3654D551A7F22940026856D /* ReactiveCocoa.framework */; };
 		A3654D5C1A7F242A0026856D /* ReactiveCocoa.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A3654D551A7F22940026856D /* ReactiveCocoa.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A3FBEC2A1A8233E20052416D /* SecondViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A3FBEC291A8233E20052416D /* SecondViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +100,8 @@
 		A3654D3E1A7F17AE0026856D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A3654D3F1A7F17AE0026856D /* ReactiveCocoaSampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReactiveCocoaSampleTests.m; sourceTree = "<group>"; };
 		A3654D491A7F22930026856D /* ReactiveCocoa.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ReactiveCocoa.xcodeproj; path = ReactiveCocoa/ReactiveCocoa.xcodeproj; sourceTree = SOURCE_ROOT; };
+		A3FBEC281A8233E20052416D /* SecondViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SecondViewController.h; sourceTree = "<group>"; };
+		A3FBEC291A8233E20052416D /* SecondViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SecondViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,6 +148,8 @@
 				A3654D281A7F17AE0026856D /* AppDelegate.m */,
 				A3654D2A1A7F17AE0026856D /* ViewController.h */,
 				A3654D2B1A7F17AE0026856D /* ViewController.m */,
+				A3FBEC281A8233E20052416D /* SecondViewController.h */,
+				A3FBEC291A8233E20052416D /* SecondViewController.m */,
 				A3654D2D1A7F17AE0026856D /* Main.storyboard */,
 				A3654D301A7F17AE0026856D /* Images.xcassets */,
 				A3654D321A7F17AE0026856D /* LaunchScreen.xib */,
@@ -331,6 +336,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3FBEC2A1A8233E20052416D /* SecondViewController.m in Sources */,
 				A3654D2C1A7F17AE0026856D /* ViewController.m in Sources */,
 				A3654D291A7F17AE0026856D /* AppDelegate.m in Sources */,
 				A3654D261A7F17AE0026856D /* main.m in Sources */,
