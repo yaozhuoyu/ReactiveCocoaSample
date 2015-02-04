@@ -48,6 +48,9 @@
     //9.测试RACDefault
     //[self testRACDefault];
     
+    //9. Signal then测试
+    [self testSignalThen];
+    
 }
 
 
@@ -589,6 +592,57 @@
          2015-02-04 12:04:58.311 ReactiveCocoaSample[5418:91099] userName:userName1
          2015-02-04 12:04:58.311 ReactiveCocoaSample[5418:91099] userName:(null)
          2015-02-04 12:04:58.312 ReactiveCocoaSample[5418:91099] userName:userName2
+         */
+    }
+    
+}
+
+- (void)testSignalThen{
+//    {
+//        [[[RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+//            [subscriber sendCompleted];
+//            //[subscriber sendError:[NSError errorWithDomain:@"test" code:100 userInfo:nil]];
+//            return nil;
+//        }] then:^RACSignal *{
+//            return [RACSignal return:@"then signal"];
+//        }] subscribeNext:^(id x) {
+//            NSLog(@"sub next: %@", x);
+//        } error:^(NSError *error) {
+//            NSLog(@"sub error: %@", error);
+//        } completed:^{
+//            NSLog(@"sub completed");
+//        }];
+//        /*
+//         对于then，只有前一个signal发送completed之后，才能往下进行，
+//         如果subscriber直接senderror，则跳过所有的，到最后的error block打印错误
+//         */
+//        
+//    }
+    
+    {
+        [[[RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendCompleted];
+            return nil;
+        }] then:^RACSignal *{
+            return RACObserve(self, userName);
+        }] subscribeNext:^(id x) {
+            NSLog(@"sub next: %@", x);
+        } error:^(NSError *error) {
+            NSLog(@"sub error: %@", error);
+        } completed:^{
+            NSLog(@"sub completed");
+        }];
+        
+        self.userName = @"userName1";
+        self.userName = @"userName2";
+        self.userName = @"userName3";
+        
+        
+        /*
+         2015-02-04 20:57:05.955 ReactiveCocoaSample[8643:285400] sub next: (null)
+         2015-02-04 20:57:05.956 ReactiveCocoaSample[8643:285400] sub next: userName1
+         2015-02-04 20:57:05.956 ReactiveCocoaSample[8643:285400] sub next: userName2
+         2015-02-04 20:57:05.956 ReactiveCocoaSample[8643:285400] sub next: userName3
          */
     }
     
