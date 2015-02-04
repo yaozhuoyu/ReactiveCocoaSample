@@ -540,6 +540,7 @@
 				A3654D451A7F17AE0026856D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A3654D461A7F17AE0026856D /* Build configuration list for PBXNativeTarget "ReactiveCocoaSampleTests" */ = {
 			isa = XCConfigurationList;
@@ -548,6 +549,7 @@
 				A3654D481A7F17AE0026856D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

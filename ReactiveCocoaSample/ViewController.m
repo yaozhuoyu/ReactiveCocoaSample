@@ -40,8 +40,15 @@
     //[self testSequence];
     
     //7.测试Signal
-    [self testSignal];
+    //[self testSignal];
+    
+    //8.测试distinctUntilChanges
+    //[self testDistinctUntilChanges];
+    
+    //9.测试RACDefault
+    [self testRACDefault];
 }
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -508,6 +515,82 @@
          2015-02-02 19:54:32.078 ReactiveCocoaSample[10426:278385] Second will launch 2 missiles
          */
     }
+}
+
+- (void)testDistinctUntilChanges{
+    RACSignal *signal = [RACObserve(self, userName) map:^id(NSString *value) {
+        return value;
+    }];
+    
+    [signal subscribeNext:^(id x) {
+        NSLog(@"normal :%@", x);
+    }];
+    
+    RACSignal *untilChangeSignal = [signal distinctUntilChanged];
+    
+    [untilChangeSignal subscribeNext:^(id x) {
+        NSLog(@"untilChange :%@", x);
+    }];
+    
+    self.userName = @"1";
+    self.userName = @"2";
+    self.userName = @"2";
+    self.userName = @"1";
+    
+    /*
+     2015-02-03 15:29:18.999 ReactiveCocoaSample[11338:170150] normal :(null)
+     2015-02-03 15:29:19.005 ReactiveCocoaSample[11338:170150] untilChange :(null)
+     2015-02-03 15:29:19.006 ReactiveCocoaSample[11338:170150] untilChange :1
+     2015-02-03 15:29:19.006 ReactiveCocoaSample[11338:170150] normal :1
+     2015-02-03 15:29:19.006 ReactiveCocoaSample[11338:170150] untilChange :2
+     2015-02-03 15:29:19.006 ReactiveCocoaSample[11338:170150] normal :2
+     2015-02-03 15:29:19.006 ReactiveCocoaSample[11338:170150] normal :2
+     2015-02-03 15:29:19.007 ReactiveCocoaSample[11338:170150] untilChange :1
+     2015-02-03 15:29:19.007 ReactiveCocoaSample[11338:170150] normal :1
+     */
+}
+
+- (void)testRACDefault{
+    {
+        [RACObserve(self, userName) subscribeNext:^(id x) {
+            NSLog(@"1.userName:%@", x);
+        }];
+        
+        RAC(self, userName, @"default") = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"userName1"];
+            [subscriber sendNext:nil];
+            [subscriber sendNext:@"userName2"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+        /*
+         2015-02-04 12:02:51.998 ReactiveCocoaSample[5285:89165] userName:(null)
+         2015-02-04 12:02:51.999 ReactiveCocoaSample[5285:89165] userName:userName1
+         2015-02-04 12:02:51.999 ReactiveCocoaSample[5285:89165] userName:default
+         2015-02-04 12:02:51.999 ReactiveCocoaSample[5285:89165] userName:userName2
+         */
+    }
+    
+    {
+        [RACObserve(self, userName) subscribeNext:^(id x) {
+            NSLog(@"2.userName:%@", x);
+        }];
+        
+        RAC(self, userName) = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"userName1"];
+            [subscriber sendNext:nil];
+            [subscriber sendNext:@"userName2"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+        /*
+         2015-02-04 12:04:58.310 ReactiveCocoaSample[5418:91099] userName:(null)
+         2015-02-04 12:04:58.311 ReactiveCocoaSample[5418:91099] userName:userName1
+         2015-02-04 12:04:58.311 ReactiveCocoaSample[5418:91099] userName:(null)
+         2015-02-04 12:04:58.312 ReactiveCocoaSample[5418:91099] userName:userName2
+         */
+    }
+    
 }
 
 
