@@ -48,9 +48,11 @@
     //9.测试RACDefault
     //[self testRACDefault];
     
-    //9. Signal then测试
-    [self testSignalThen];
+    //10. Signal then测试
+    //[self testSignalThen];
     
+    //11. Signal Throttling 测试
+    [self testSignalThrottle];
 }
 
 
@@ -646,6 +648,27 @@
          */
     }
     
+}
+
+- (void)testSignalThrottle{
+    [[RACObserve(self, userName) throttle:1] subscribeNext:^(id x) {
+        NSLog(@"x %@", x);
+    }];
+    self.userName = @"userName1";
+    self.userName = @"userName2";
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.userName = @"userName3";
+    });
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.userName = @"userName4";
+    });
+    
+    /*
+     2015-02-05 10:32:24.909 ReactiveCocoaSample[1692:38218] x userName3
+     2015-02-05 10:32:26.559 ReactiveCocoaSample[1692:38218] x userName4
+     */
 }
 
 
