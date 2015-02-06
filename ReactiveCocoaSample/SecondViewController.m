@@ -14,6 +14,8 @@
     NSString *name;
 }
 
+@property (nonatomic, strong) NSString *email;
+
 @end
 
 @implementation SecondViewController
@@ -25,6 +27,11 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    RAC(self, self.email) = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        [subscriber sendNext:@"11"];
+        return nil;
+    }];
+    NSLog(@"self.email %@", self.email);
     
     //[self testSignalRetainCycle1];
     

@@ -52,7 +52,7 @@
     //[self testSignalThen];
     
     //11. Signal Throttling 测试
-    [self testSignalThrottle];
+    //[self testSignalThrottle];
 }
 
 
