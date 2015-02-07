@@ -52,7 +52,13 @@
     //[self testSignalThen];
     
     //11. Signal Throttling 测试
-    [self testSignalThrottle];
+    //[self testSignalThrottle];
+    
+    //12. subscribeNext函数分析
+    //[self analyzeSubscribeNext];
+    
+    //13. signal concat
+    [self testSignalConcat];
 }
 
 
@@ -671,9 +677,114 @@
      */
 }
 
+- (void)analyzeSubscribeNext{
+    RACSignal *normalSignal =
+    [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        [subscriber sendNext:@"next"];
+        [subscriber sendCompleted];
+        return nil;
+    }];
+    
+    [normalSignal subscribeNext:^(id x) {
+        NSLog(@"x:%@", x);
+    } completed:^{
+        NSLog(@"completed");
+    }];
+    
+    /*
+     1.当开始subscribe一个signal的时候，signal会创建一个RACSubscriber，然后调用subscribe函数
+     2.signal的subscribe函数会执行创建signal的时候传入的block
+     3.block中的sendNext函数会接着调用RACSubscriber的next block，所以就打印出log了。
+     */
+}
+
+- (void)testSignalConcat{
+    {
+        RACSignal *signalA = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"signalA-1"];
+            [subscriber sendNext:@"signalA-2"];
+            [subscriber sendCompleted];
+            //[subscriber sendError:nil];
+            return nil;
+        }];
+        
+        RACSignal *signalB = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"signalB-1"];
+            [subscriber sendNext:@"signalB-2"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+        
+        [[signalA concat:signalB] subscribeNext:^(id x) {
+            NSLog(@"next: %@",x);
+        } error:^(NSError *error) {
+            NSLog(@"error: %@",error);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        /*
+         2015-02-07 11:15:40.403 ReactiveCocoaSample[16371:160451] next: signalA-1
+         2015-02-07 11:15:40.404 ReactiveCocoaSample[16371:160451] next: signalA-2
+         2015-02-07 11:15:40.404 ReactiveCocoaSample[16371:160451] next: signalB-1
+         2015-02-07 11:15:40.404 ReactiveCocoaSample[16371:160451] next: signalB-2
+         2015-02-07 11:15:40.404 ReactiveCocoaSample[16371:160451] completed
+         */
+    }
+    
+    {
+        RACSignal *signalA = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"signalA-1"];
+            [subscriber sendNext:@"signalA-2"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+        
+        RACSignal *signalB = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"signalB-1"];
+            [subscriber sendNext:@"signalB-2"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+        
+        
+        [[signalA then:^RACSignal *{
+            return signalB;
+        }] subscribeNext:^(id x) {
+            NSLog(@"next %@", x);
+        } error:^(NSError *error) {
+            NSLog(@"error: %@",error);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        /*
+         2015-02-07 15:18:21.929 ReactiveCocoaSample[17899:197875] next signalB-1
+         2015-02-07 15:18:21.930 ReactiveCocoaSample[17899:197875] next signalB-2
+         2015-02-07 15:18:21.931 ReactiveCocoaSample[17899:197875] completed
+         */
+    }
+    
+}
 
 #pragma mark - 
-#pragma mark - time fire
+#pragma mark - private
+
+//- (RACSignal *)createHotSignal{
+//    
+//}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
