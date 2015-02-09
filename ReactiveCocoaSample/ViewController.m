@@ -13,6 +13,7 @@
     NSTimer *timer;
 }
 @property (nonatomic, strong) NSString *userName;
+@property (nonatomic, strong) NSString *catName;
 @end
 
 @implementation ViewController
@@ -53,6 +54,21 @@
     
     //11. Signal Throttling 测试
     //[self testSignalThrottle];
+    
+    //12. subscribeNext函数分析
+    //[self analyzeSubscribeNext];
+    
+    //13. signal concat
+    //[self testSignalConcat];
+    
+    //14. signal defer
+    //[self testSignalDefer];
+    
+    //15. signal take
+    //[self testSignalTake];
+
+    //16.signal switchToLatest
+    [self testSignalSwitchToLatest];
 }
 
 
@@ -671,9 +687,263 @@
      */
 }
 
+- (void)analyzeSubscribeNext{
+    RACSignal *normalSignal =
+    [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        [subscriber sendNext:@"next"];
+        [subscriber sendCompleted];
+        return nil;
+    }];
+    
+    [normalSignal subscribeNext:^(id x) {
+        NSLog(@"x:%@", x);
+    } completed:^{
+        NSLog(@"completed");
+    }];
+    
+    /*
+     1.当开始subscribe一个signal的时候，signal会创建一个RACSubscriber，然后调用subscribe函数
+     2.signal的subscribe函数会执行创建signal的时候传入的block
+     3.block中的sendNext函数会接着调用RACSubscriber的next block，所以就打印出log了。
+     */
+}
+
+- (void)testSignalConcat{
+    {
+        RACSignal *signalA = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"signalA-1"];
+            [subscriber sendNext:@"signalA-2"];
+            [subscriber sendCompleted];
+            //[subscriber sendError:nil];
+            return nil;
+        }];
+        
+        RACSignal *signalB = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"signalB-1"];
+            [subscriber sendNext:@"signalB-2"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+        
+        [[signalA concat:signalB] subscribeNext:^(id x) {
+            NSLog(@"next: %@",x);
+        } error:^(NSError *error) {
+            NSLog(@"error: %@",error);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        /*
+         2015-02-07 11:15:40.403 ReactiveCocoaSample[16371:160451] next: signalA-1
+         2015-02-07 11:15:40.404 ReactiveCocoaSample[16371:160451] next: signalA-2
+         2015-02-07 11:15:40.404 ReactiveCocoaSample[16371:160451] next: signalB-1
+         2015-02-07 11:15:40.404 ReactiveCocoaSample[16371:160451] next: signalB-2
+         2015-02-07 11:15:40.404 ReactiveCocoaSample[16371:160451] completed
+         */
+    }
+    
+    {
+        RACSignal *signalA = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"signalA-1"];
+            [subscriber sendNext:@"signalA-2"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+        
+        RACSignal *signalB = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"signalB-1"];
+            [subscriber sendNext:@"signalB-2"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+        
+        
+        [[signalA then:^RACSignal *{
+            return signalB;
+        }] subscribeNext:^(id x) {
+            NSLog(@"next %@", x);
+        } error:^(NSError *error) {
+            NSLog(@"error: %@",error);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        /*
+         2015-02-07 15:18:21.929 ReactiveCocoaSample[17899:197875] next signalB-1
+         2015-02-07 15:18:21.930 ReactiveCocoaSample[17899:197875] next signalB-2
+         2015-02-07 15:18:21.931 ReactiveCocoaSample[17899:197875] completed
+         */
+    }
+}
+
+- (void)testSignalDefer{
+    {
+        RACSignal *signal =
+        [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            NSLog(@"create sigal");
+            [[RACObserve(self, userName) filter:^BOOL(NSString *str) {
+                return [str length] > 1;
+            }] subscribe:subscriber];
+            
+            return nil;
+        }];
+        
+        [signal subscribeNext:^(id x) {
+            NSLog(@"next %@", x);
+        } error:^(NSError *error) {
+            NSLog(@"error %@", error);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        self.userName = @"111";
+        self.userName = @"2";
+        self.userName = @"333";
+        /*
+         2015-02-07 16:10:09.961 ReactiveCocoaSample[18717:217705] create sigal
+         2015-02-07 16:10:09.964 ReactiveCocoaSample[18717:217705] next 111
+         2015-02-07 16:10:09.964 ReactiveCocoaSample[18717:217705] next 333
+         */
+    }
+    
+    {
+        RACSignal *signal = [RACSignal defer:^RACSignal *{
+            NSLog(@"create sigal");
+            return
+            [RACObserve(self, userName) filter:^BOOL(NSString *str) {
+                return [str length] > 1;
+            }];
+        }];
+        
+        [signal subscribeNext:^(id x) {
+            NSLog(@"next %@", x);
+        } error:^(NSError *error) {
+            NSLog(@"error %@", error);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        self.userName = @"111";
+        self.userName = @"2";
+        self.userName = @"333";
+        
+        /*
+         2015-02-07 16:10:44.294 ReactiveCocoaSample[18758:218189] create sigal
+         2015-02-07 16:10:44.297 ReactiveCocoaSample[18758:218189] next 111
+         2015-02-07 16:10:44.298 ReactiveCocoaSample[18758:218189] next 333
+         */
+    }
+}
+
+- (void)testSignalTake{
+    RACSignal *signal =
+    [[RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        [subscriber sendNext:@"1"];
+        [subscriber sendNext:@"2"];
+        [subscriber sendNext:@"3"];
+        [subscriber sendCompleted];
+        
+        return nil;
+    }] take:2];
+    
+    [signal subscribeNext:^(id x) {
+        NSLog(@"next:%@", x);
+    } error:^(NSError *error) {
+        NSLog(@"error:%@", error);
+    } completed:^{
+        NSLog(@"completed");
+    }];
+    
+    /*
+     2015-02-08 17:42:50.167 ReactiveCocoaSample[941:19481] next:1
+     2015-02-08 17:42:50.168 ReactiveCocoaSample[941:19481] next:2
+     2015-02-08 17:42:50.169 ReactiveCocoaSample[941:19481] completed
+     */
+}
+
+- (void)testSignalSwitchToLatest{
+    {
+        [[[RACObserve(self, userName) map:^id(NSString *un) {
+            return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+                [subscriber sendNext:[NSString stringWithFormat:@"1.%@", un]];
+                [subscriber sendNext:[NSString stringWithFormat:@"2.%@", un]];
+                [subscriber sendCompleted];
+                return nil;
+            }];
+        }] switchToLatest] subscribeNext:^(id x) {
+            NSLog(@"next:%@", x);
+        } error:^(NSError *error) {
+            NSLog(@"error:%@", error);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        
+        
+        self.userName = @"u1";
+        self.userName = @"u2";
+        
+        /*
+         2015-02-08 18:47:01.789 ReactiveCocoaSample[1657:38092] next:1.(null)
+         2015-02-08 18:47:01.789 ReactiveCocoaSample[1657:38092] next:2.(null)
+         2015-02-08 18:47:01.790 ReactiveCocoaSample[1657:38092] next:1.u1
+         2015-02-08 18:47:01.790 ReactiveCocoaSample[1657:38092] next:2.u1
+         2015-02-08 18:47:01.790 ReactiveCocoaSample[1657:38092] next:1.u2
+         2015-02-08 18:47:01.791 ReactiveCocoaSample[1657:38092] next:2.u2
+         */
+    }
+    
+    {
+        RACSubject *letters = [RACSubject subject];
+        RACSubject *numbers = [RACSubject subject];
+        RACSubject *signalOfSignals = [RACSubject subject];
+        
+        RACSignal *switched = [signalOfSignals switchToLatest];
+        
+        [switched subscribeNext:^(NSString *x) {
+            NSLog(@"%@", x);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        [signalOfSignals sendNext:letters];
+        [letters sendNext:@"A"];
+        [letters sendNext:@"B"];
+        
+        [signalOfSignals sendNext:numbers];
+        [letters sendNext:@"C"];
+        [numbers sendNext:@"1"];
+        
+        [signalOfSignals sendNext:letters];
+        [numbers sendNext:@"2"];
+        [letters sendNext:@"D"];
+        
+        [letters sendCompleted];
+        [signalOfSignals sendCompleted];
+        //只有当signalOfSignals和最新的signal都compltetd的时候，才算完成
+        //sends `completed` when both the receiver and the last sent signal complete.
+    }
+    
+}
 
 #pragma mark - 
-#pragma mark - time fire
+#pragma mark - private
+
+//- (RACSignal *)createHotSignal{
+//    
+//}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
