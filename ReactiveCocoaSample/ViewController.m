@@ -68,7 +68,11 @@
     //[self testSignalTake];
 
     //16.signal switchToLatest
-    [self testSignalSwitchToLatest];
+    //[self testSignalSwitchToLatest];
+
+    //17. signal flatten:(NSUInteger)maxConcurrent
+    //[self testSignalFlattenMaxcount];
+
 }
 
 
@@ -923,6 +927,81 @@
         //只有当signalOfSignals和最新的signal都compltetd的时候，才算完成
         //sends `completed` when both the receiver and the last sent signal complete.
     }
+    
+}
+
+- (void)testSignalFlattenMaxcount{
+    
+    {
+        RACSubject *subject1 = [RACSubject subject];
+        RACSubject *subject2 = [RACSubject subject];
+        RACSubject *subject3 = [RACSubject subject];
+        
+        RACSubject *signalOfSignal = [RACSubject subject];
+        
+        RACSignal *flattenSignal = [signalOfSignal flatten:2];
+        [flattenSignal subscribeNext:^(id x) {
+            NSLog(@"flatten count next: %@", x);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        [signalOfSignal sendNext:subject1];
+        [signalOfSignal sendNext:subject2];
+        [signalOfSignal sendNext:subject3];
+        
+        [subject1 sendNext:@"subject1_1"];
+        [subject2 sendNext:@"subject2_1"];
+        [subject3 sendNext:@"subject3_1"];
+        
+        [subject1 sendNext:@"subject1_2"];
+        [subject2 sendNext:@"subject2_2"];
+        [subject3 sendNext:@"subject3_2"];
+        
+        /*
+         2015-02-09 13:16:06.191 ReactiveCocoaSample[2921:117640] flatten count next: subject1_1
+         2015-02-09 13:16:06.193 ReactiveCocoaSample[2921:117640] flatten count next: subject2_1
+         2015-02-09 13:16:06.193 ReactiveCocoaSample[2921:117640] flatten count next: subject1_2
+         2015-02-09 13:16:06.193 ReactiveCocoaSample[2921:117640] flatten count next: subject2_2
+         */
+    }
+    
+    {
+        RACSubject *subject1 = [RACSubject subject];
+        RACSubject *subject2 = [RACSubject subject];
+        RACSubject *subject3 = [RACSubject subject];
+        
+        RACSubject *signalOfSignal = [RACSubject subject];
+        
+        RACSignal *flattenSignal = [signalOfSignal flatten];
+        [flattenSignal subscribeNext:^(id x) {
+            NSLog(@"flatten next: %@", x);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        [signalOfSignal sendNext:subject1];
+        [signalOfSignal sendNext:subject2];
+        [signalOfSignal sendNext:subject3];
+        
+        [subject1 sendNext:@"subject1_1"];
+        [subject2 sendNext:@"subject2_1"];
+        [subject3 sendNext:@"subject3_1"];
+        
+        [subject1 sendNext:@"subject1_2"];
+        [subject2 sendNext:@"subject2_2"];
+        [subject3 sendNext:@"subject3_2"];
+        
+        /*
+         2015-02-09 13:16:06.193 ReactiveCocoaSample[2921:117640] flatten next: subject1_1
+         2015-02-09 13:16:06.193 ReactiveCocoaSample[2921:117640] flatten next: subject2_1
+         2015-02-09 13:16:06.193 ReactiveCocoaSample[2921:117640] flatten next: subject3_1
+         2015-02-09 13:16:06.193 ReactiveCocoaSample[2921:117640] flatten next: subject1_2
+         2015-02-09 13:16:06.193 ReactiveCocoaSample[2921:117640] flatten next: subject2_2
+         2015-02-09 13:16:06.194 ReactiveCocoaSample[2921:117640] flatten next: subject3_2
+         */
+    }
+    
     
 }
 
