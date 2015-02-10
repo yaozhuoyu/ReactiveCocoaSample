@@ -72,7 +72,15 @@
 
     //17. signal flatten:(NSUInteger)maxConcurrent
     //[self testSignalFlattenMaxcount];
+    
+    //18. signla catch测试
+    //[self testSignalCatch];
 
+    //19. signal doNext测试
+    //[self testSignalDoNext];
+    
+    //20. signal mapReplace
+    [self testSignalMapReplace];
 }
 
 
@@ -1003,6 +1011,93 @@
     }
     
     
+}
+
+- (void)testSignalCatch{
+    /*
+     /// Subscribes to the returned signal when an error occurs.
+     - (RACSignal *)catch:(RACSignal * (^)(NSError *error))catchBlock;
+     */
+    
+    RACSubject *subject = [RACSubject subject];
+    
+    [[subject catch:^RACSignal *(NSError *error) {
+        return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            [subscriber sendNext:@"catch send next"];
+            [subscriber sendCompleted];
+            return nil;
+        }];
+    }] subscribeNext:^(id x) {
+        NSLog(@"next %@", x);
+    } error:^(NSError *error) {
+        NSLog(@"error %@", error);
+    } completed:^{
+        NSLog(@"completed");
+    }];
+    
+    
+    [subject sendNext:@"next1"];
+    [subject sendError:[NSError errorWithDomain:@"domain" code:11 userInfo:nil]];
+    
+    /*
+     2015-02-10 13:57:07.012 ReactiveCocoaSample[3251:142730] next next1
+     2015-02-10 13:57:07.012 ReactiveCocoaSample[3251:142730] next catch send next
+     2015-02-10 13:57:07.013 ReactiveCocoaSample[3251:142730] completed
+     */
+}
+
+- (void)testSignalDoNext{
+    //doNext  在相应next事件之前多一点事情
+    RACSignal *doNextSignal =
+    [[RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        [subscriber sendNext:@"next1"];
+        [subscriber sendNext:@"next2"];
+        [subscriber sendCompleted];
+        return nil;
+    }] doNext:^(id x) {
+        NSLog(@"begin do next %@",x);
+    }];
+    
+    [doNextSignal subscribeNext:^(id x) {
+        NSLog(@"next %@",x);
+    } error:^(NSError *error) {
+        NSLog(@"error %@",error);
+    } completed:^{
+        NSLog(@"completed");
+    }];
+    
+    /*
+     2015-02-10 15:16:21.609 ReactiveCocoaSample[4573:177725] begin do next next1
+     2015-02-10 15:16:21.609 ReactiveCocoaSample[4573:177725] next next1
+     2015-02-10 15:16:21.609 ReactiveCocoaSample[4573:177725] begin do next next2
+     2015-02-10 15:16:21.610 ReactiveCocoaSample[4573:177725] next next2
+     2015-02-10 15:16:21.610 ReactiveCocoaSample[4573:177725] completed
+     */
+}
+
+- (void)testSignalMapReplace{
+    RACSignal *signal =
+    [[RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        [subscriber sendNext:@"12"];
+        [subscriber sendNext:@"34"];
+        [subscriber sendNext:@"56"];
+        [subscriber sendCompleted];
+        return nil;
+    }] mapReplace:@"num"];
+    
+    [signal subscribeNext:^(id x) {
+        NSLog(@"next %@",x);
+    } error:^(NSError *error) {
+        NSLog(@"error %@",error);
+    } completed:^{
+        NSLog(@"completed");
+    }];
+    /*
+     2015-02-10 15:27:45.623 ReactiveCocoaSample[4982:185232] next num
+     2015-02-10 15:27:45.624 ReactiveCocoaSample[4982:185232] next num
+     2015-02-10 15:27:45.624 ReactiveCocoaSample[4982:185232] next num
+     2015-02-10 15:27:45.624 ReactiveCocoaSample[4982:185232] completed
+     */
 }
 
 #pragma mark - 
