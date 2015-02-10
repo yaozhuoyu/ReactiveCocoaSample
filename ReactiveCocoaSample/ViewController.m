@@ -80,7 +80,10 @@
     //[self testSignalDoNext];
     
     //20. signal mapReplace
-    [self testSignalMapReplace];
+    //[self testSignalMapReplace];
+    
+    //21. signal 测试 flattenMap subscribe RACSubject
+    //[self testFlattenMapAndSubscribeAndTake];
 }
 
 
@@ -853,7 +856,7 @@
         [subscriber sendNext:@"1"];
         [subscriber sendNext:@"2"];
         [subscriber sendNext:@"3"];
-        [subscriber sendCompleted];
+        //[subscriber sendCompleted];
         
         return nil;
     }] take:2];
@@ -1098,6 +1101,69 @@
      2015-02-10 15:27:45.624 ReactiveCocoaSample[4982:185232] next num
      2015-02-10 15:27:45.624 ReactiveCocoaSample[4982:185232] completed
      */
+}
+
+- (void)testFlattenMapAndSubscribeAndTake{
+//    {
+//        RACSubject *subject = [RACSubject subject];
+//        RACSignal *signal = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+//            [[[subject flattenMap:^RACStream *(NSString *str) {
+//                return [RACSignal return:str];
+//            }]
+//            take:1]
+//            subscribe:subscriber];
+//            
+//            return nil;
+//        }];
+//        
+//        [signal subscribeNext:^(id x) {
+//            NSLog(@"next : %@", x);
+//        } error:^(NSError *error) {
+//            NSLog(@"error: %@", error);
+//        } completed:^{
+//            NSLog(@"completed");
+//        }];
+//        
+//        [subject sendNext:@"1"];
+//        
+//        /*
+//         
+//         如果把take 1 删除，就不会打印completed
+//         
+//         2015-02-11 00:32:32.823 ReactiveCocoaSample[6175:280955] next : 1
+//         2015-02-11 00:32:32.824 ReactiveCocoaSample[6175:280955] completed
+//         */
+//    }
+    
+    {
+        RACSubject *subject = [RACSubject subject];
+        RACSignal *signal = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            
+            [[[subject map:^id(id value) {
+                return value;
+            }] take:1] subscribe:subscriber];
+            
+            return nil;
+        }];
+        
+        [signal subscribeNext:^(id x) {
+            NSLog(@"next : %@", x);
+        } error:^(NSError *error) {
+            NSLog(@"error: %@", error);
+        } completed:^{
+            NSLog(@"completed");
+        }];
+        
+        [subject sendNext:@"1"];
+        
+        /*
+         
+         如果把take 1 删除，就不会打印completed
+         
+         2015-02-11 00:32:32.823 ReactiveCocoaSample[6175:280955] next : 1
+         2015-02-11 00:32:32.824 ReactiveCocoaSample[6175:280955] completed
+         */
+    }
 }
 
 #pragma mark - 
